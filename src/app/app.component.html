@@ -1,0 +1,145 @@
+<section class="body-wrapper">
+  <div class="page-center">
+    <section>
+      <h4 class="section-header">Employee List</h4>
+      <table>
+        <thead>
+          <tr>
+            <th *ngFor="let col of tableColumns">
+              {{col}}
+              <button class="table-btn" *ngIf="col === 'Action'" (click)="showForm = true"><i
+                  class="fa-solid fa-user-plus"></i></button>
+            </th>
+          </tr>
+          <tr>
+            <th></th>
+            <th>
+              <input class="form-field" type="text" placeholder="Search by Name" [(ngModel)]="filterObj.name">
+            </th>
+            <th>
+              <select class="form-field" [(ngModel)]="filterObj.job_title">
+                <option value="">Select Job Title</option>
+                <option *ngFor="let title of jobTitleArray" [value]="title">{{title}}</option>
+              </select>
+            </th>
+            <th>
+              <input class="form-field" type="text" placeholder="Age" [(ngModel)]="filterObj.age" #ageInput="ngModel"
+                pattern="^[0-9]*$" maxlength="3">
+              <div *ngIf="ageInput?.errors">
+                <span class="validation-err" *ngIf="ageInput?.errors?.['pattern']">
+                  Characters are not allowed
+                </span>
+              </div>
+            </th>
+            <th>
+              <input class="form-field" type="date" [(ngModel)]="filterObj.start_date">
+            </th>
+            <th>
+              <input class="form-field" type="date" [(ngModel)]="filterObj.end_date">
+            </th>
+            <th>
+              <div class="actionBtn-wrapper">
+                <button class="table-btn" (click)="applyFilter()"><i class="fa-solid fa-filter"></i></button>
+                <button class="table-btn" (click)="clearFilter()"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngIf="filteredEmployeeArr.length; else no_record">
+            <tr *ngFor="let employee of filteredEmployeeArr;let i=index">
+              <td>{{i+1}}</td>
+              <td>{{employee?.name}}</td>
+              <td>{{employee?.job_title}}</td>
+              <td>{{employee?.age}}</td>
+              <td>{{employee?.start_date | date:'MM-dd-yyyy'}}</td>
+              <td>
+                <span *ngIf="employee?.end_date; else currentlyWorking">{{employee?.end_date |
+                  date:'MM-dd-yyyy'}}</span>
+                <ng-template #currentlyWorking>
+                  <span class="currently-working">Currently Working</span>
+                </ng-template>
+              </td>
+              <td>
+                <div class="actionBtn-wrapper">
+                  <button class="table-btn" (click)="viewEmployee(employee, i)"><i class="fa-solid fa-eye"></i></button>
+                  <button class="table-btn" (click)="deleteRecord(i)"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <ng-template #no_record>
+            <tr>
+              <td colspan="7">No Record Found</td>
+            </tr>
+          </ng-template>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</section>
+
+<section class="form-wrapper" [ngStyle]="{'display': showForm ? 'flex' : 'none'}">
+  <div class="form-inner">
+    <form [formGroup]="employeeForm">
+      <h4>{{!toEdit ? 'Add' : 'View/Update'}} Employee</h4>
+      <div class="form-field-wrapper">
+        <label>Name *</label>
+        <input class="form-field" type="text" formControlName="name">
+        <div class="validation-err"
+          *ngIf="(employeeForm.get('name')?.invalid && employeeForm.get('name')?.touched) || submitted">
+          <span *ngIf="employeeForm.get('name')?.errors?.['required']">Please provide Name.</span>
+        </div>
+      </div>
+      <div class="form-field-wrapper">
+        <label>Job Title *</label>
+        <select class="form-field" formControlName="job_title">
+          <option value='null'>Select Job Title</option>
+          <option *ngFor="let title of jobTitleArray">{{title}}</option>
+        </select>
+        <div class="validation-err"
+          *ngIf="(employeeForm.get('job_title')?.invalid && employeeForm.get('job_title')?.touched) || submitted">
+          <span *ngIf="employeeForm.get('job_title')?.errors?.['required']">Please select Job title.</span>
+        </div>
+      </div>
+      <div class="form-field-wrapper">
+        <label>Age *</label>
+        <input class="form-field" type="text" formControlName="age">
+        <div class="validation-err"
+          *ngIf="(employeeForm.get('age')?.invalid && employeeForm.get('age')?.touched) || submitted">
+          <span *ngIf="employeeForm.get('age')?.errors?.['required']">Please provide age.</span>
+          <span
+            *ngIf="employeeForm.get('age')?.errors?.['pattern'] && !employeeForm.get('age')?.errors?.['required']">Characters
+            are not allowed.</span>
+          <span
+            *ngIf="employeeForm.get('age')?.errors?.['maxlength'] && !employeeForm.get('age')?.errors?.['pattern']">Maximum
+            characters limit reached.</span>
+        </div>
+      </div>
+      <div class="form-field-wrapper">
+        <label>Start Date *</label>
+        <input class="form-field" type="date" formControlName="start_date" [max]="today | date:'yyyy-MM-dd'">
+        <div class="validation-err"
+          *ngIf="(employeeForm.get('start_date')?.invalid && employeeForm.get('start_date')?.touched) || submitted">
+          <span *ngIf="employeeForm.get('start_date')?.errors?.['required']">Please provide start date.</span>
+        </div>
+      </div>
+      <div class="form-field-wrapper">
+        <label class="checkbox-label"><input class="form-field" type="checkbox" formControlName="isCurrentlyWorking"
+            (change)="changeCurrentlyWorking($event)"> I'm currently working here</label>
+      </div>
+      <div class="form-field-wrapper">
+        <label>End Date *</label>
+        <input class="form-field" type="date" formControlName="end_date" [min]="employeeForm.get('start_date')?.value" [max]="today | date:'yyyy-MM-dd'" [readonly]="employeeForm.get('isCurrentlyWorking')?.value == true">
+        <div class="validation-err"
+          *ngIf="(employeeForm.get('end_date')?.invalid && employeeForm.get('end_date')?.touched) || submitted">
+          <span *ngIf="employeeForm.get('end_date')?.errors?.['required']">Please provide end date.</span>
+        </div>
+      </div>
+      <div class="button-wrapper">
+        <button class="table-btn" (click)="save()">{{!toEdit ? 'Create' : 'Update'}}</button>
+        <button class="table-btn" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</section>
