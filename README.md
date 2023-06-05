@@ -1,7 +1,6 @@
-# Welcome to Assignment 👋
-![Version](https://img.shields.io/badge/version-0.0.0-blue.svg?cacheSeconds=2592000)
+# Welcome to The Employee Application 👋
+![Version](https://img.shields.io/badge/version-0.0.1-blue.svg?cacheSeconds=2592000)
 
-> The Employee Application.
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.2.0.
 
 ## Install
